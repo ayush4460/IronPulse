@@ -3,9 +3,9 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import prisma from './prisma';
 
-const JWT_SECRET_STRING = process.env.JWT_SECRET || 'hevy-super-secret-iron-gym-key-2026-secure-token-998877-neon-db';
-const SECRET_KEY = new TextEncoder().encode(JWT_SECRET_STRING);
-export const COOKIE_NAME = process.env.COOKIE_NAME || 'iron_session_token';
+const JWT_SECRET_STRING = process.env.JWT_SECRET;
+const SECRET_KEY = new TextEncoder().encode(JWT_SECRET_STRING!);
+export const COOKIE_NAME = process.env.COOKIE_NAME!;
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(10);
@@ -39,14 +39,24 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: payload.email as string,
     };
   } catch {
-    return null;
+    try {
+      const { payload } = await jwtVerify(token, SECRET_KEY);
+      return {
+        userId: payload.userId as string,
+        username: payload.username as string,
+        email: payload.email as string,
+      };
+    } catch {
+      return null;
+    }
   }
 }
 
 export async function getCurrentUser() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    const token =
+      cookieStore.get(COOKIE_NAME)?.value;
     if (!token) return null;
 
     const payload = await verifySessionToken(token);
