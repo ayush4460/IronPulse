@@ -39,16 +39,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: payload.email as string,
     };
   } catch {
-    try {
-      const { payload } = await jwtVerify(token, SECRET_KEY);
-      return {
-        userId: payload.userId as string,
-        username: payload.username as string,
-        email: payload.email as string,
-      };
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 
